@@ -1,148 +1,81 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>System Update</title>
-<style>
-  body, html {
-    margin: 0; height: 100%; overflow: hidden;
-    background: #0078D7;
-    color: white;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    text-align: center;
-  }
-  .update-screen {
-    display: flex; flex-direction: column;
-    justify-content: center; align-items: center;
-    height: 100vh; font-size: 2em;
-    transition: opacity 1s ease;
-  }
-  .hidden { opacity: 0; }
-  .spinner {
-    margin-top: 20px;
-    border: 8px solid rgba(255,255,255,0.3);
-    border-top: 8px solid white;
-    border-radius: 50%;
-    width: 80px; height: 80px;
-    animation: spin 1.5s linear infinite;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-  }
-  .spinner.visible { opacity: 1; }
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  .progress-text, .done-text {
-    margin-top: 30px;
-    font-size: 2em;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-    max-width: 80vw;
-  }
-  .progress-text.visible, .done-text.visible {
-    opacity: 1;
-  }
-  #jumpscare {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    background: black url('https://i.imgur.com/Z5LVXnh.jpg') center center no-repeat;
-    background-size: cover;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.5s ease;
-    z-index: 9999;
-  }
-  #jumpscare.visible {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  #startOverlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    background: #0078D7;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 2em;
-    cursor: pointer;
-    z-index: 10000;
-    user-select: none;
-  }
-  #startOverlay:hover {
-    background: #005aab;
-  }
-</style>
+  <title>System Update</title>
+  <style>
+    html, body {
+      margin: 0;
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #update {
+      display: none;
+      font-size: 2em;
+      margin-top: 40vh;
+    }
+    #start-btn {
+      margin-top: 40vh;
+      font-size: 2em;
+      padding: 1em 2em;
+      cursor: pointer;
+    }
+    #jumpscare {
+      display: none;
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: black;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    #jumpscare img {
+      max-width: 100%;
+      max-height: 100%;
+    }
+  </style>
 </head>
 <body>
+  <div id="start-btn" onclick="startUpdate()">Click to Start Update</div>
 
-<div id="startOverlay">Click to Start Update</div>
+  <div id="update">Updating... Please do not turn off your computer.<br><br>0%</div>
 
-<div class="update-screen" id="updateScreen" style="visibility: hidden;">
-  <p>Working on updates...</p>
-  <p>Do not turn off your PC</p>
-  <div class="spinner" id="spinner"></div>
-  <div class="progress-text" id="progressText">0%</div>
-  <div class="done-text" id="doneText" style="display:none;">
-    Update Completed.<br>You may close the tab.
+  <div id="jumpscare">
+    <img src="https://i.imgur.com/9z3K8uq.png" alt="BOO!">
+    <audio id="scream" src="https://www.soundjay.com/human/sounds/scream-01.mp3" autoplay></audio>
   </div>
-</div>
 
-<div id="jumpscare"></div>
+  <script>
+    function startUpdate() {
+      // Request full screen
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) elem.requestFullscreen();
 
-<audio id="screamSound" src="https://cdn.pixabay.com/download/audio/2022/03/23/audio_8fbbf31498.mp3?filename=scream-6341.mp3" preload="auto"></audio>
+      document.getElementById("start-btn").style.display = "none";
+      const update = document.getElementById("update");
+      update.style.display = "block";
 
-<script>
-  const startOverlay = document.getElementById('startOverlay');
-  const updateScreen = document.getElementById('updateScreen');
-  const spinner = document.getElementById('spinner');
-  const progressText = document.getElementById('progressText');
-  const doneText = document.getElementById('doneText');
-  const jumpscare = document.getElementById('jumpscare');
-  const screamSound = document.getElementById('screamSound');
-
-  startOverlay.addEventListener('click', () => {
-    startOverlay.style.display = 'none';
-    updateScreen.style.visibility = 'visible';
-
-    document.documentElement.requestFullscreen().catch(() => {});
-
-    setTimeout(() => {
-      updateScreen.classList.add('hidden');
-      spinner.classList.add('visible');
-      progressText.classList.add('visible');
-
-      let progress = 0;
+      let percent = 0;
       const interval = setInterval(() => {
-        progress++;
-        progressText.textContent = progress + '%';
-        if (progress >= 100) {
+        percent += 5;
+        update.innerHTML = `Updating... Please do not turn off your computer.<br><br>${percent}%`;
+        if (percent >= 100) {
           clearInterval(interval);
-          spinner.classList.remove('visible');
-          progressText.classList.remove('visible');
-          doneText.style.display = 'block';
-          doneText.classList.add('visible');
-
-          setTimeout(() => {
-            doneText.classList.remove('visible');
-            jumpscare.classList.add('visible');
-            screamSound.play().catch(() => {
-              console.log('Audio playback failed, needs user interaction.');
-            });
-
-            setTimeout(() => {
-              jumpscare.classList.remove('visible');
-              document.body.style.background = 'black';
-              updateScreen.style.display = 'none';
-            }, 2000);
-          }, 1000);
+          update.innerHTML = "Update complete. You may close this tab.";
+          setTimeout(triggerJumpscare, 2000);
         }
-      }, 100);
-    }, 2000);
-  });
-</script>
+      }, 300);
+    }
 
+    function triggerJumpscare() {
+      const scare = document.getElementById("jumpscare");
+      scare.style.display = "flex";
+      document.getElementById("scream").play();
+    }
+  </script>
 </body>
 </html>
